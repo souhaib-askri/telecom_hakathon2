@@ -1,10 +1,10 @@
 [gd_scene load_steps=5 format=3 uid="uid://barrier_scrapbound01"]
 
 [ext_resource type="Script" path="res://scripts/scrapbound/Barrier.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/sprites/turrets/barricade_scrap_sheet.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/sprites/props/sandbags_barrier.png" id="2_tex"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
-size = Vector2(36, 24)
+size = Vector2(60, 16)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fill"]
 bg_color = Color(0.2, 0.8, 0.35, 1)
@@ -15,17 +15,17 @@ collision_mask = 6
 script = ExtResource("1_script")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-scale = Vector2(0.55, 0.55)
+scale = Vector2(0.22, 0.22)
 texture = ExtResource("2_tex")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_1")
 
 [node name="HealthBar" type="ProgressBar" parent="."]
-offset_left = -18.0
-offset_top = -20.0
-offset_right = 18.0
-offset_bottom = -16.0
+offset_left = -28.0
+offset_top = -16.0
+offset_right = 28.0
+offset_bottom = -12.0
 theme_override_styles/fill = SubResource("StyleBoxFlat_fill")
 max_value = 150.0
 value = 150.0

@@ -54,10 +54,12 @@ func _ready() -> void:
 		if peers.size() > 0:
 			client_peer_id = peers[0]
 		else:
-			for id in NetworkManager.players:
-				if id != 1:
-					client_peer_id = id
-					break
+			var net = get_node_or_null("/root/NetworkManager")
+			if net:
+				for id in net.players:
+					if id != 1:
+						client_peer_id = id
+						break
 	else:
 		client_peer_id = multiplayer.get_unique_id()
 			
@@ -540,5 +542,7 @@ func _on_rematch_pressed() -> void:
 
 @rpc("call_local", "reliable")
 func return_to_lobby_net() -> void:
-	NetworkManager.disconnect_game()
+	var net = get_node_or_null("/root/NetworkManager")
+	if net:
+		net.disconnect_game()
 	get_tree().change_scene_to_file("res://scenes/scrapbound/Lobby.tscn")
