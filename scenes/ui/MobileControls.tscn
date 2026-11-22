@@ -1,73 +1,56 @@
-[gd_scene load_steps=8 format=3 uid="uid://mobile_ctrl001"]
+[gd_scene load_steps=21 format=3 uid="uid://mobile_ctrl_mc01"]
 
 [ext_resource type="Script" path="res://scripts/ui/MobileControls.gd" id="1_scr"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/btn_normal.png" id="2_btn"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/btn_pressed.png" id="3_btn_p"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/btn_red.png" id="4_btn_red"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/btn_red_pressed.png" id="5_btn_red_p"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/hotbar_slot.png" id="6_slot"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/arrow_up.png" id="7_arr_u"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/arrow_down.png" id="8_arr_d"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/arrow_left.png" id="9_arr_l"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/arrow_right.png" id="10_arr_r"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/dpad_center.png" id="11_center"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/icon_sword.png" id="12_sword"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/icon_jump.png" id="13_jump"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/icon_brick.png" id="14_brick"]
+[ext_resource type="Texture2D" path="res://assets/sprites/ui/minecraft/icon_dots.png" id="15_dots"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_joy_base"]
-bg_color = Color(0.08, 0.1, 0.14, 0.5)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_norm"]
+texture = ExtResource("2_btn")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_press"]
+texture = ExtResource("3_btn_p")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_fire"]
+texture = ExtResource("4_btn_red")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_btn_fire_press"]
+texture = ExtResource("5_btn_red_p")
+texture_margin_left = 4.0
+texture_margin_top = 4.0
+texture_margin_right = 4.0
+texture_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mc_panel"]
+bg_color = Color(0.12, 0.12, 0.16, 0.9)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.2, 0.8, 1, 0.6)
-corner_radius_top_left = 48
-corner_radius_top_right = 48
-corner_radius_bottom_right = 48
-corner_radius_bottom_left = 48
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_joy_knob"]
-bg_color = Color(0.2, 0.85, 1, 0.8)
-corner_radius_top_left = 20
-corner_radius_top_right = 20
-corner_radius_bottom_right = 20
-corner_radius_bottom_left = 20
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_fire"]
-bg_color = Color(0.85, 0.25, 0.2, 0.85)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1, 0.6, 0.4, 0.9)
-corner_radius_top_left = 32
-corner_radius_top_right = 32
-corner_radius_bottom_right = 32
-corner_radius_bottom_left = 32
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_weld"]
-bg_color = Color(0.1, 0.7, 0.95, 0.85)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.6, 0.9, 1, 0.9)
-corner_radius_top_left = 28
-corner_radius_top_right = 28
-corner_radius_bottom_right = 28
-corner_radius_bottom_left = 28
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_trade"]
-bg_color = Color(0.15, 0.75, 0.45, 0.85)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.5, 1, 0.7, 0.9)
-corner_radius_top_left = 23
-corner_radius_top_right = 23
-corner_radius_bottom_right = 23
-corner_radius_bottom_left = 23
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_btn_craft"]
-bg_color = Color(0.85, 0.7, 0.15, 0.85)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(1, 0.9, 0.5, 0.9)
-corner_radius_top_left = 23
-corner_radius_top_right = 23
-corner_radius_bottom_right = 23
-corner_radius_bottom_left = 23
+border_color = Color(0.45, 0.45, 0.52, 0.9)
 
 [node name="MobileControls" type="Control"]
 layout_mode = 3
@@ -84,10 +67,10 @@ layout_mode = 1
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = -120.0
-offset_right = 120.0
-offset_bottom = -24.0
+offset_left = 16.0
+offset_top = -136.0
+offset_right = 136.0
+offset_bottom = -16.0
 grow_vertical = 0
 mouse_filter = 0
 
@@ -98,24 +81,82 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_joy_base")
+mouse_filter = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_mc_panel")
+
+[node name="BtnDpadUp" type="Button" parent="Joystick/Base"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 40.0
+offset_right = 80.0
+offset_bottom = 40.0
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+icon = ExtResource("7_arr_u")
+icon_alignment = 1
+
+[node name="BtnDpadLeft" type="Button" parent="Joystick/Base"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 40.0
+offset_right = 40.0
+offset_bottom = 80.0
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+icon = ExtResource("9_arr_l")
+icon_alignment = 1
+
+[node name="BtnDpadCenter" type="Button" parent="Joystick/Base"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 40.0
+offset_top = 40.0
+offset_right = 80.0
+offset_bottom = 80.0
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+icon = ExtResource("11_center")
+icon_alignment = 1
+
+[node name="BtnDpadRight" type="Button" parent="Joystick/Base"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 80.0
+offset_top = 40.0
+offset_right = 120.0
+offset_bottom = 80.0
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+icon = ExtResource("10_arr_r")
+icon_alignment = 1
+
+[node name="BtnDpadDown" type="Button" parent="Joystick/Base"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 40.0
+offset_top = 80.0
+offset_right = 80.0
+offset_bottom = 120.0
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+icon = ExtResource("8_arr_d")
+icon_alignment = 1
 
 [node name="Knob" type="Panel" parent="Joystick/Base"]
+visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -20.0
-offset_top = -20.0
-offset_right = 20.0
-offset_bottom = 20.0
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_joy_knob")
 
 [node name="ActionButtons" type="Control" parent="."]
 layout_mode = 1
@@ -124,10 +165,10 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -175.0
-offset_top = -170.0
-offset_right = -15.0
-offset_bottom = -15.0
+offset_left = -160.0
+offset_top = -140.0
+offset_right = -12.0
+offset_bottom = -12.0
 grow_horizontal = 0
 grow_vertical = 0
 mouse_filter = 2
@@ -139,18 +180,18 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -68.0
-offset_top = -68.0
-offset_right = -4.0
-offset_bottom = -4.0
+offset_left = -58.0
+offset_top = -58.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 13
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_fire")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_fire")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_fire")
+theme_override_font_sizes/font_size = 9
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_fire")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_fire")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_fire_press")
 text = "FIRE"
+icon = ExtResource("12_sword")
+icon_alignment = 1
+vertical_icon_alignment = 0
 
 [node name="BtnPurify" type="Button" parent="ActionButtons"]
 layout_mode = 1
@@ -159,18 +200,19 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -135.0
-offset_top = -60.0
-offset_right = -79.0
-offset_bottom = -4.0
+offset_left = -118.0
+offset_top = -58.0
+offset_right = -66.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 11
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_weld")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_weld")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_weld")
+theme_override_font_sizes/font_size = 9
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
 text = "WELD"
+icon = ExtResource("14_brick")
+icon_alignment = 1
+vertical_icon_alignment = 0
 
 [node name="BtnTrade" type="Button" parent="ActionButtons"]
 layout_mode = 1
@@ -179,18 +221,16 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -60.0
-offset_top = -125.0
-offset_right = -14.0
-offset_bottom = -79.0
+offset_left = -58.0
+offset_top = -118.0
+offset_bottom = -66.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_trade")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_trade")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_trade")
-text = "AEGIS"
+theme_override_font_sizes/font_size = 8
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+text = "⚗\nAEGIS"
 
 [node name="BtnCraft" type="Button" parent="ActionButtons"]
 layout_mode = 1
@@ -199,18 +239,17 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -120.0
-offset_top = -120.0
-offset_right = -74.0
-offset_bottom = -74.0
+offset_left = -118.0
+offset_top = -118.0
+offset_right = -66.0
+offset_bottom = -66.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 10
-theme_override_styles/normal = SubResource("StyleBoxFlat_btn_craft")
-theme_override_styles/hover = SubResource("StyleBoxFlat_btn_craft")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_btn_craft")
-text = "CRAFT"
+theme_override_font_sizes/font_size = 8
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+text = "🎒\nCRAFT"
 
 [node name="BtnNight" type="Button" parent="ActionButtons"]
 layout_mode = 1
@@ -219,12 +258,14 @@ anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -175.0
+offset_left = -152.0
 offset_top = -54.0
-offset_right = -135.0
-offset_bottom = -14.0
+offset_right = -122.0
+offset_bottom = -16.0
 grow_horizontal = 0
 grow_vertical = 0
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 9
-text = "NIGHT"
+theme_override_font_sizes/font_size = 7
+theme_override_styles/normal = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/hover = SubResource("StyleBoxTexture_btn_norm")
+theme_override_styles/pressed = SubResource("StyleBoxTexture_btn_press")
+text = "🌙\nPHASE"

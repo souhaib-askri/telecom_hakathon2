@@ -10,18 +10,28 @@ class_name MobileControls
 @onready var btn_craft: Button = $ActionButtons/BtnCraft
 @onready var btn_night: Button = $ActionButtons/BtnNight
 
+@onready var btn_dpad_up: Button = %BtnDpadUp
+@onready var btn_dpad_down: Button = %BtnDpadDown
+@onready var btn_dpad_left: Button = %BtnDpadLeft
+@onready var btn_dpad_right: Button = %BtnDpadRight
+@onready var btn_dpad_center: Button = %BtnDpadCenter
+
 var is_dragging_joystick: bool = false
 var joystick_touch_id: int = -1
-var joystick_radius: float = 45.0
+var joystick_radius: float = 48.0
 var move_vector: Vector2 = Vector2.ZERO
+
+var dpad_up: bool = false
+var dpad_down: bool = false
+var dpad_left: bool = false
+var dpad_right: bool = false
 
 var player_node: SamiPlayer = null
 
 func _ready() -> void:
-	# Enable mouse filter so touches don't block HUD
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	
-	# Connect buttons
+	# Connect Action buttons
 	if btn_shoot:
 		btn_shoot.button_down.connect(_on_shoot_down)
 		btn_shoot.button_up.connect(_on_shoot_up)
@@ -39,8 +49,38 @@ func _ready() -> void:
 	if btn_night:
 		btn_night.pressed.connect(_on_night_pressed)
 		
-	# Find player
+	# Connect Minecraft D-Pad buttons
+	if btn_dpad_up:
+		btn_dpad_up.button_down.connect(func(): dpad_up = true; _update_dpad_vector())
+		btn_dpad_up.button_up.connect(func(): dpad_up = false; _update_dpad_vector())
+	if btn_dpad_down:
+		btn_dpad_down.button_down.connect(func(): dpad_down = true; _update_dpad_vector())
+		btn_dpad_down.button_up.connect(func(): dpad_down = false; _update_dpad_vector())
+	if btn_dpad_left:
+		btn_dpad_left.button_down.connect(func(): dpad_left = true; _update_dpad_vector())
+		btn_dpad_left.button_up.connect(func(): dpad_left = false; _update_dpad_vector())
+	if btn_dpad_right:
+		btn_dpad_right.button_down.connect(func(): dpad_right = true; _update_dpad_vector())
+		btn_dpad_right.button_up.connect(func(): dpad_right = false; _update_dpad_vector())
+	if btn_dpad_center:
+		btn_dpad_center.pressed.connect(func():
+			if player_node and is_instance_valid(player_node):
+				player_node.velocity += (player_node.aim_direction if player_node.aim_direction != Vector2.ZERO else Vector2.RIGHT) * 60.0
+		)
+		
 	_find_player()
+
+func _update_dpad_vector() -> void:
+	var vec = Vector2.ZERO
+	if dpad_up: vec.y -= 1.0
+	if dpad_down: vec.y += 1.0
+	if dpad_left: vec.x -= 1.0
+	if dpad_right: vec.x += 1.0
+	if vec != Vector2.ZERO:
+		vec = vec.normalized()
+	move_vector = vec
+	if player_node:
+		player_node.mobile_move_vector = move_vector
 
 func _find_player() -> void:
 	if not player_node or not is_instance_valid(player_node):

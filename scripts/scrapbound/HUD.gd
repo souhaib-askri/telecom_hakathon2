@@ -3,33 +3,68 @@ class_name ScrapboundHUD
 
 signal rematch_requested()
 
-@onready var timer_label: Label = %TimerLabel
+# Textures
+const TEX_HEART_FULL = preload("res://assets/sprites/ui/minecraft/heart_full.png")
+const TEX_HEART_EMPTY = preload("res://assets/sprites/ui/minecraft/heart_empty.png")
+const TEX_ARMOR_FULL = preload("res://assets/sprites/ui/minecraft/armor_full.png")
 
+# Minecraft Top Info
 @onready var my_title_label: Label = %MyTitleLabel
 @onready var my_score_label: Label = %MyScoreLabel
-@onready var my_health_bar: ProgressBar = %MyHealthBar
-@onready var my_health_val: Label = %MyHealthVal
-@onready var my_tower_bar: ProgressBar = %MyTowerBar
-@onready var my_tower_val: Label = %MyTowerVal
-@onready var my_weapon_label: Label = %MyWeaponLabel
 @onready var my_scrap_label: Label = %MyScrapLabel
 @onready var my_mats_label: Label = %MyMatsLabel
+@onready var match_title: Label = $TopHUD/CenterBox/MatchTitle
 
-@onready var results_panel: Panel = %ResultsPanel
-@onready var winner_label: Label = %WinnerLabel
-@onready var results_detail: Label = %ResultsDetail
-@onready var btn_rematch: Button = %BtnRematch
+# Progress Bars (Preserved for compatibility)
+@onready var my_health_bar: ProgressBar = %MyHealthBar
+@onready var my_tower_bar: ProgressBar = %MyTowerBar
 
+# Status Row (Hearts, Armor, XP & Timer)
+@onready var health_hearts_container: HBoxContainer = %HealthHeartsContainer
+@onready var my_health_val: Label = %MyHealthVal
+@onready var tower_armor_container: HBoxContainer = %TowerArmorContainer
+@onready var my_tower_val: Label = %MyTowerVal
+@onready var xp_progress_bar: TextureProgressBar = %XPProgressBar
+@onready var timer_label: Label = %TimerLabel
+
+# Minecraft Hotbar
+@onready var hotbar_active_frame: TextureRect = %HotbarActiveFrame
+@onready var slot1_weapon: Button = %Slot1_Weapon
+@onready var my_weapon_label: Label = %MyWeaponLabel
+@onready var slot2_wall: Button = %Slot2_Wall
+@onready var lbl_wall: Label = $MinecraftHotbarArea/HotbarHBox/Slot2_Wall/LblWall
+@onready var slot3_tower: Button = %Slot3_Tower
+@onready var lbl_tower: Label = $MinecraftHotbarArea/HotbarHBox/Slot3_Tower/LblTower
+@onready var slot4_refine: Button = %Slot4_Refine
+@onready var lbl_refine: Label = $MinecraftHotbarArea/HotbarHBox/Slot4_Refine/LblRefine
+@onready var slot5_smg: Button = %Slot5_SMG
+@onready var lbl_smg: Label = $MinecraftHotbarArea/HotbarHBox/Slot5_SMG/LblSMG
+@onready var slot6_cannon: Button = %Slot6_Cannon
+@onready var lbl_cannon: Label = $MinecraftHotbarArea/HotbarHBox/Slot6_Cannon/LblCannon
+@onready var slot7_mats: Panel = %Slot7_Mats
+@onready var lbl_mats_icon: Label = $MinecraftHotbarArea/HotbarHBox/Slot7_Mats/LblMatsIcon
+@onready var btn_open_craft: Button = %BtnOpenCraft
+
+# Minecraft D-Pad
 @onready var joystick_base: Panel = %JoystickBase
 @onready var joystick_knob: Panel = %JoystickKnob
+@onready var btn_dpad_up: Button = %BtnDpadUp
+@onready var btn_dpad_left: Button = %BtnDpadLeft
+@onready var btn_dpad_center: Button = %BtnDpadCenter
+@onready var btn_dpad_right: Button = %BtnDpadRight
+@onready var btn_dpad_down: Button = %BtnDpadDown
+
+# Minecraft Action Controls
 @onready var btn_shoot: Button = %BtnShoot
+@onready var btn_jump: Button = %BtnJump
 @onready var btn_build: Button = %BtnBuild
+@onready var btn_quick_tower: Button = %BtnQuickTower
+
+# Aux Aliases for Compatibility
 @onready var btn_switch_weapon: Button = %BtnSwitchWeapon
 @onready var btn_refine: Button = %BtnRefine
-@onready var btn_open_craft: Button = %BtnOpenCraft
 @onready var btn_craft_rapid: Button = %BtnCraftRapid
 @onready var btn_craft_cannon: Button = %BtnCraftCannon
-@onready var btn_quick_tower: Button = %BtnQuickTower
 
 # Crafting Inventory Panel
 @onready var crafting_panel: Panel = %CraftingPanel
@@ -47,13 +82,26 @@ signal rematch_requested()
 @onready var btn_inv_repair_tower: Button = %BtnInvRepairTower
 @onready var btn_inv_deploy_wall: Button = %BtnInvDeployWall
 
+# Results Panel
+@onready var results_panel: Panel = %ResultsPanel
+@onready var winner_label: Label = %WinnerLabel
+@onready var results_detail: Label = %ResultsDetail
+@onready var btn_rematch: Button = %BtnRematch
+
 var is_dragging_joy: bool = false
 var joy_touch_id: int = -1
-var joy_radius: float = 38.0
+var joy_radius: float = 48.0
 var move_vector: Vector2 = Vector2.ZERO
+
+var dpad_up: bool = false
+var dpad_down: bool = false
+var dpad_left: bool = false
+var dpad_right: bool = false
 
 var local_player_id: int = 1
 var current_unlocked_weapons: Array = ["Basic"]
+var heart_icons: Array[TextureRect] = []
+var armor_icons: Array[TextureRect] = []
 
 func _ready() -> void:
 	if results_panel:
@@ -63,36 +111,56 @@ func _ready() -> void:
 	if btn_rematch:
 		btn_rematch.pressed.connect(_on_rematch_pressed)
 		
-	if joystick_base:
-		joystick_base.gui_input.connect(_on_joystick_gui_input)
-		
+	# Setup Minecraft Hearts (10 pixel hearts)
+	_setup_minecraft_hearts()
+	# Setup Minecraft Armor (10 pixel shields)
+	_setup_minecraft_armor()
+	
+	# Connect D-Pad Buttons
+	_setup_dpad_buttons()
+	
+	# Connect Action Buttons
 	if btn_shoot:
 		btn_shoot.button_down.connect(func(): _set_shooting(true))
 		btn_shoot.button_up.connect(func(): _set_shooting(false))
 		
+	if btn_jump:
+		btn_jump.pressed.connect(_on_jump_pressed)
+		
 	if btn_build:
 		btn_build.pressed.connect(_on_build_pressed)
 		
-	if btn_switch_weapon:
-		btn_switch_weapon.pressed.connect(_on_switch_weapon_pressed)
+	if btn_quick_tower:
+		btn_quick_tower.pressed.connect(_on_build_tower_pressed)
 		
-	if btn_refine:
-		btn_refine.pressed.connect(_on_refine_pressed)
-		
+	# Connect Hotbar Slots
+	if slot1_weapon:
+		slot1_weapon.pressed.connect(_on_switch_weapon_pressed)
+	if slot2_wall:
+		slot2_wall.pressed.connect(_on_build_pressed)
+	if slot3_tower:
+		slot3_tower.pressed.connect(_on_build_tower_pressed)
+	if slot4_refine:
+		slot4_refine.pressed.connect(func(): _on_refine_pressed("random"))
+	if slot5_smg:
+		slot5_smg.pressed.connect(_on_craft_rapid_pressed)
+	if slot6_cannon:
+		slot6_cannon.pressed.connect(_on_craft_cannon_pressed)
 	if btn_open_craft:
 		btn_open_craft.pressed.connect(toggle_crafting_panel)
 		
-	if btn_close_craft:
-		btn_close_craft.pressed.connect(func(): if crafting_panel: crafting_panel.visible = false)
-		
+	# Aux backward compatibility connections
+	if btn_switch_weapon:
+		btn_switch_weapon.pressed.connect(_on_switch_weapon_pressed)
+	if btn_refine:
+		btn_refine.pressed.connect(func(): _on_refine_pressed("random"))
 	if btn_craft_rapid:
 		btn_craft_rapid.pressed.connect(_on_craft_rapid_pressed)
-		
 	if btn_craft_cannon:
 		btn_craft_cannon.pressed.connect(_on_craft_cannon_pressed)
 		
-	if btn_quick_tower:
-		btn_quick_tower.pressed.connect(_on_build_tower_pressed)
+	if btn_close_craft:
+		btn_close_craft.pressed.connect(func(): if crafting_panel: crafting_panel.visible = false)
 		
 	if btn_tab_weapons:
 		btn_tab_weapons.pressed.connect(func():
@@ -108,24 +176,87 @@ func _ready() -> void:
 		
 	if btn_inv_craft_smg:
 		btn_inv_craft_smg.pressed.connect(func(): _on_craft_weapon_clicked("RapidFire"))
-		
 	if btn_inv_craft_cannon:
 		btn_inv_craft_cannon.pressed.connect(func(): _on_craft_weapon_clicked("HighDamage"))
-		
 	if btn_inv_craft_shotgun:
 		btn_inv_craft_shotgun.pressed.connect(func(): _on_craft_weapon_clicked("Shotgun"))
-		
 	if btn_inv_craft_sniper:
 		btn_inv_craft_sniper.pressed.connect(func(): _on_craft_weapon_clicked("PlasmaSniper"))
-		
 	if btn_inv_build_tower:
 		btn_inv_build_tower.pressed.connect(_on_build_tower_pressed)
-		
 	if btn_inv_repair_tower:
 		btn_inv_repair_tower.pressed.connect(_on_repair_tower_pressed)
-		
 	if btn_inv_deploy_wall:
 		btn_inv_deploy_wall.pressed.connect(_on_build_pressed)
+
+func _setup_minecraft_hearts() -> void:
+	if not health_hearts_container: return
+	for child in health_hearts_container.get_children():
+		child.queue_free()
+	heart_icons.clear()
+	for i in range(10):
+		var tr = TextureRect.new()
+		tr.custom_minimum_size = Vector2(11, 11)
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		tr.texture = TEX_HEART_FULL
+		health_hearts_container.add_child(tr)
+		heart_icons.append(tr)
+
+func _setup_minecraft_armor() -> void:
+	if not tower_armor_container: return
+	for child in tower_armor_container.get_children():
+		child.queue_free()
+	armor_icons.clear()
+	for i in range(10):
+		var tr = TextureRect.new()
+		tr.custom_minimum_size = Vector2(11, 11)
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		tr.stretch_mode = TextureRect.STRETCH_KEEP_CENTERED
+		tr.texture = TEX_ARMOR_FULL
+		tower_armor_container.add_child(tr)
+		armor_icons.append(tr)
+
+func _setup_dpad_buttons() -> void:
+	if joystick_base:
+		joystick_base.gui_input.connect(_on_joystick_gui_input)
+		
+	if btn_dpad_up:
+		btn_dpad_up.button_down.connect(func(): dpad_up = true; _update_dpad_vector())
+		btn_dpad_up.button_up.connect(func(): dpad_up = false; _update_dpad_vector())
+	if btn_dpad_down:
+		btn_dpad_down.button_down.connect(func(): dpad_down = true; _update_dpad_vector())
+		btn_dpad_down.button_up.connect(func(): dpad_down = false; _update_dpad_vector())
+	if btn_dpad_left:
+		btn_dpad_left.button_down.connect(func(): dpad_left = true; _update_dpad_vector())
+		btn_dpad_left.button_up.connect(func(): dpad_left = false; _update_dpad_vector())
+	if btn_dpad_right:
+		btn_dpad_right.button_down.connect(func(): dpad_right = true; _update_dpad_vector())
+		btn_dpad_right.button_up.connect(func(): dpad_right = false; _update_dpad_vector())
+	if btn_dpad_center:
+		btn_dpad_center.pressed.connect(_on_jump_pressed)
+
+func _update_dpad_vector() -> void:
+	var vec = Vector2.ZERO
+	if dpad_up: vec.y -= 1.0
+	if dpad_down: vec.y += 1.0
+	if dpad_left: vec.x -= 1.0
+	if dpad_right: vec.x += 1.0
+	if vec != Vector2.ZERO:
+		vec = vec.normalized()
+	move_vector = vec
+	_send_move_to_player(move_vector)
+
+func _on_jump_pressed() -> void:
+	# Minecraft jump / action feedback
+	var main = get_tree().get_first_node_in_group("Main") as ScrapboundMain
+	if not main:
+		main = get_parent().get_parent() as ScrapboundMain
+	if main:
+		var p = main.p1 if local_player_id == 1 else main.p2
+		if is_instance_valid(p):
+			p.velocity += (p.aim_direction if p.aim_direction != Vector2.ZERO else Vector2.RIGHT) * 80.0
+			p.show_floating_text("JUMP!", Color(0.3, 1.0, 0.4))
 
 func set_local_player(p_id: int) -> void:
 	local_player_id = p_id
@@ -140,7 +271,9 @@ func update_timer(time_left: float) -> void:
 	var t = max(0.0, time_left)
 	if timer_label:
 		timer_label.text = "%02d:%02d" % [int(t) / 60, int(t) % 60]
-		timer_label.modulate = Color(1.0, 0.25, 0.25) if t <= 10.0 else Color.WHITE
+		timer_label.modulate = Color(1.0, 0.25, 0.25) if t <= 10.0 else Color(0.33, 1.0, 0.33)
+	if xp_progress_bar:
+		xp_progress_bar.value = (t / 120.0) * 100.0
 
 func update_player_ui(
 	p1_hp: int, p1_score: int, p1_kills: int, p1_tower: int, p1_wpn: String, p1_inv: Dictionary,
@@ -156,19 +289,9 @@ func update_player_ui(
 	var my_unl = p1_unl if local_player_id == 1 else p2_unl
 	current_unlocked_weapons = my_unl
 	
-	# Update MY UI
+	# Update Minecraft Top HUD
 	if my_score_label:
 		my_score_label.text = "SCORE: %d (Kills: %d)" % [my_score, my_kills]
-	if my_health_bar:
-		my_health_bar.value = my_hp
-	if my_health_val:
-		my_health_val.text = "%d HP" % my_hp
-	if my_tower_bar:
-		my_tower_bar.value = my_tower
-	if my_tower_val:
-		my_tower_val.text = "%d / 1000" % my_tower
-	if my_weapon_label:
-		my_weapon_label.text = "WEAPON: " + my_wpn
 	if my_scrap_label:
 		my_scrap_label.text = "GARBAGE: %d  |  BATTERY: %d" % [my_inv.get("scrap", 0), my_inv.get("battery", 0)]
 	if my_mats_label:
@@ -178,13 +301,55 @@ func update_player_ui(
 			my_inv.get("material_c", 0), my_inv.get("material_d", 0)
 		]
 		
-	# Update Switch Weapon Button
-	if btn_switch_weapon:
-		btn_switch_weapon.text = "🔄 %s" % my_wpn.to_upper()
-		btn_switch_weapon.disabled = (my_unl.size() <= 1)
-		btn_switch_weapon.modulate = Color(1.0, 1.0, 1.0, 1.0) if my_unl.size() > 1 else Color(0.7, 0.7, 0.7, 0.6)
+	# Update Hidden Bars
+	if my_health_bar:
+		my_health_bar.value = my_hp
+	if my_tower_bar:
+		my_tower_bar.value = my_tower
 		
-	# Update Refine Button: guides player to take scraps to their team's Refinery
+	# Update Minecraft 10 Hearts
+	var full_hearts = clamp(int(ceil(float(my_hp) / 10.0)), 0, 10)
+	for i in range(heart_icons.size()):
+		var icon = heart_icons[i]
+		if i < full_hearts:
+			icon.texture = TEX_HEART_FULL
+			icon.modulate = Color.WHITE
+		else:
+			icon.texture = TEX_HEART_EMPTY
+			icon.modulate = Color(1.0, 1.0, 1.0, 0.5)
+	if my_health_val:
+		my_health_val.text = "%d HP" % my_hp
+		
+	# Update Minecraft 10 Shields/Armor
+	var full_shields = clamp(int(ceil(float(my_tower) / 100.0)), 0, 10)
+	for i in range(armor_icons.size()):
+		var icon = armor_icons[i]
+		if i < full_shields:
+			icon.modulate = Color.WHITE
+		else:
+			icon.modulate = Color(1.0, 1.0, 1.0, 0.2)
+	if my_tower_val:
+		my_tower_val.text = "%d/1000" % my_tower
+		
+	# Update Minecraft Hotbar Slots
+	if my_weapon_label:
+		my_weapon_label.text = "🗡️\n" + my_wpn
+		
+	var can_wall = (my_inv.get("wood", 0) >= 2 or my_inv.get("plastic", 0) >= 2 or my_inv.get("iron", 0) >= 2)
+	if lbl_wall:
+		lbl_wall.modulate = Color.WHITE if can_wall else Color(0.6, 0.6, 0.6, 0.5)
+	if btn_build:
+		btn_build.disabled = !can_wall
+		btn_build.modulate = Color.WHITE if can_wall else Color(0.65, 0.65, 0.65, 0.5)
+		
+	var can_tower = (my_inv.get("iron", 0) >= 2 and my_inv.get("plastic", 0) >= 1)
+	if lbl_tower:
+		lbl_tower.modulate = Color.WHITE if can_tower else Color(0.6, 0.6, 0.6, 0.5)
+	if btn_quick_tower:
+		btn_quick_tower.disabled = !can_tower
+		btn_quick_tower.modulate = Color.WHITE if can_tower else Color(0.65, 0.65, 0.65, 0.5)
+		
+	var scrap_held = my_inv.get("scrap", 0)
 	var main_node = get_tree().get_first_node_in_group("Main") as ScrapboundMain
 	if not main_node:
 		main_node = get_parent().get_parent() as ScrapboundMain
@@ -195,59 +360,27 @@ func update_player_ui(
 		if is_instance_valid(p_local) and is_instance_valid(r_local):
 			is_near_refinery = (p_local.global_position.distance_to(r_local.global_position) <= 130.0)
 
-	var scrap_held = my_inv.get("scrap", 0)
-	if btn_refine:
+	if lbl_refine:
 		if scrap_held < 10:
-			btn_refine.disabled = true
-			btn_refine.text = "♻ SCRAP %d/10" % scrap_held
-			btn_refine.modulate = Color(0.6, 0.6, 0.6, 0.5)
+			lbl_refine.text = "♻\n%d/10" % scrap_held
+			lbl_refine.modulate = Color(0.6, 0.6, 0.6, 0.5)
 		elif not is_near_refinery:
-			btn_refine.disabled = false
-			btn_refine.text = "🏃 TO RECYCLER (%d)" % scrap_held
-			btn_refine.modulate = Color(1.0, 0.85, 0.3, 0.95)
+			lbl_refine.text = "🏃\nNEAR (%d)" % scrap_held
+			lbl_refine.modulate = Color(1.0, 0.85, 0.3)
 		else:
-			btn_refine.disabled = false
-			btn_refine.text = "♻ RECYCLE NOW (%d)" % scrap_held
-			btn_refine.modulate = Color(0.25, 1.0, 0.4, 1.0)
-		
-	# Update Quick Craft Buttons
-	if btn_craft_rapid:
-		var can_rapid = (my_inv.get("iron", 0) >= 1 and my_inv.get("plastic", 0) >= 1) or (my_inv.get("material_a", 0) >= 1 and my_inv.get("material_b", 0) >= 1)
-		btn_craft_rapid.disabled = !can_rapid
-		btn_craft_rapid.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_rapid else Color(0.65, 0.65, 0.65, 0.45)
-	if btn_craft_cannon:
-		var can_cannon = (my_inv.get("iron", 0) >= 2 and my_inv.get("wood", 0) >= 1) or (my_inv.get("material_a", 0) >= 1 and my_inv.get("material_c", 0) >= 1)
-		btn_craft_cannon.disabled = !can_cannon
-		btn_craft_cannon.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_cannon else Color(0.65, 0.65, 0.65, 0.45)
-		
-	if btn_build:
-		var can_build = (my_inv.get("wood", 0) >= 2 or my_inv.get("plastic", 0) >= 2 or my_inv.get("iron", 0) >= 2)
-		btn_build.disabled = !can_build
-		btn_build.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_build else Color(0.65, 0.65, 0.65, 0.45)
-		
-	# Update Quick Tower button and Workshop Tower build button (Cost: 2 Iron + 1 Plastic)
-	var can_tower = (my_inv.get("iron", 0) >= 2 and my_inv.get("plastic", 0) >= 1)
-	if btn_quick_tower:
-		btn_quick_tower.disabled = !can_tower
-		btn_quick_tower.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_tower else Color(0.65, 0.65, 0.65, 0.45)
-	if btn_inv_build_tower:
-		btn_inv_build_tower.disabled = !can_tower
-		btn_inv_build_tower.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_tower else Color(0.65, 0.65, 0.65, 0.45)
-		
-	# Update Base Tower Repair button (Cost: 2 Wood + 1 Iron, Tower < 1000 HP)
-	var can_repair = (my_inv.get("wood", 0) >= 2 and my_inv.get("iron", 0) >= 1 and my_tower < 1000)
-	if btn_inv_repair_tower:
-		btn_inv_repair_tower.disabled = !can_repair
-		btn_inv_repair_tower.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_repair else Color(0.65, 0.65, 0.65, 0.45)
-		if my_tower >= 1000:
-			btn_inv_repair_tower.text = "FULL HP"
-		else:
-			btn_inv_repair_tower.text = "REPAIR (+250)"
+			lbl_refine.text = "♻\nRECYCLE (%d)" % scrap_held
+			lbl_refine.modulate = Color(0.25, 1.0, 0.4)
 			
-	if btn_inv_deploy_wall:
-		var can_wall = (my_inv.get("wood", 0) >= 2 or my_inv.get("plastic", 0) >= 2 or my_inv.get("iron", 0) >= 2)
-		btn_inv_deploy_wall.disabled = !can_wall
-		btn_inv_deploy_wall.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_wall else Color(0.65, 0.65, 0.65, 0.45)
+	var can_rapid = (my_inv.get("iron", 0) >= 1 and my_inv.get("plastic", 0) >= 1) or (my_inv.get("material_a", 0) >= 1 and my_inv.get("material_b", 0) >= 1)
+	if lbl_smg:
+		lbl_smg.modulate = Color.WHITE if can_rapid else Color(0.6, 0.6, 0.6, 0.5)
+		
+	var can_cannon = (my_inv.get("iron", 0) >= 2 and my_inv.get("wood", 0) >= 1) or (my_inv.get("material_a", 0) >= 1 and my_inv.get("material_c", 0) >= 1)
+	if lbl_cannon:
+		lbl_cannon.modulate = Color.WHITE if can_cannon else Color(0.6, 0.6, 0.6, 0.5)
+		
+	if lbl_mats_icon:
+		lbl_mats_icon.text = "🌲%d ⚙%d\n🧪%d" % [my_inv.get("wood", 0), my_inv.get("iron", 0), my_inv.get("plastic", 0)]
 
 	# Update Crafting Inventory Panel elements
 	if craft_mats_label:
@@ -255,13 +388,29 @@ func update_player_ui(
 			my_inv.get("wood", 0), my_inv.get("iron", 0), my_inv.get("plastic", 0)
 		]
 	if btn_inv_craft_smg:
-		_update_weapon_card_btn(btn_inv_craft_smg, "RapidFire", my_wpn, my_unl, (my_inv.get("iron", 0) >= 1 and my_inv.get("plastic", 0) >= 1))
+		_update_weapon_card_btn(btn_inv_craft_smg, "RapidFire", my_wpn, my_unl, can_rapid)
 	if btn_inv_craft_cannon:
-		_update_weapon_card_btn(btn_inv_craft_cannon, "HighDamage", my_wpn, my_unl, (my_inv.get("iron", 0) >= 2 and my_inv.get("wood", 0) >= 1))
+		_update_weapon_card_btn(btn_inv_craft_cannon, "HighDamage", my_wpn, my_unl, can_cannon)
 	if btn_inv_craft_shotgun:
-		_update_weapon_card_btn(btn_inv_craft_shotgun, "Shotgun", my_wpn, my_unl, (my_inv.get("wood", 0) >= 1 and my_inv.get("iron", 0) >= 1 and my_inv.get("plastic", 0) >= 1))
+		var can_shotgun = (my_inv.get("wood", 0) >= 1 and my_inv.get("iron", 0) >= 1 and my_inv.get("plastic", 0) >= 1)
+		_update_weapon_card_btn(btn_inv_craft_shotgun, "Shotgun", my_wpn, my_unl, can_shotgun)
 	if btn_inv_craft_sniper:
-		_update_weapon_card_btn(btn_inv_craft_sniper, "PlasmaSniper", my_wpn, my_unl, (my_inv.get("plastic", 0) >= 2 and my_inv.get("iron", 0) >= 1))
+		var can_sniper = (my_inv.get("plastic", 0) >= 2 and my_inv.get("iron", 0) >= 1)
+		_update_weapon_card_btn(btn_inv_craft_sniper, "PlasmaSniper", my_wpn, my_unl, can_sniper)
+	if btn_inv_build_tower:
+		btn_inv_build_tower.disabled = !can_tower
+		btn_inv_build_tower.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_tower else Color(0.65, 0.65, 0.65, 0.45)
+	if btn_inv_repair_tower:
+		var can_repair = (my_inv.get("wood", 0) >= 2 and my_inv.get("iron", 0) >= 1 and my_tower < 1000)
+		btn_inv_repair_tower.disabled = !can_repair
+		btn_inv_repair_tower.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_repair else Color(0.65, 0.65, 0.65, 0.45)
+		if my_tower >= 1000:
+			btn_inv_repair_tower.text = "FULL HP"
+		else:
+			btn_inv_repair_tower.text = "REPAIR (+250)"
+	if btn_inv_deploy_wall:
+		btn_inv_deploy_wall.disabled = !can_wall
+		btn_inv_deploy_wall.modulate = Color(1.0, 1.0, 1.0, 1.0) if can_wall else Color(0.65, 0.65, 0.65, 0.45)
 
 func _on_joystick_gui_input(event: InputEvent) -> void:
 	if not joystick_base: return
